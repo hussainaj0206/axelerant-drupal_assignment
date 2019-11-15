@@ -1,6 +1,0 @@
-name: Site Information Form
-type: module
-description: 'Custom general site configuration for administrators.'
-package: Custom
-core: 8.x
-#configure: site_info.form
