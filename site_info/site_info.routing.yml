@@ -1,0 +1,7 @@
+site_info.settings:
+  path: '/admin/config/system/site-information'
+  defaults:
+    _form: 'Drupal\site_info\Form\SiteSettingsForm'
+    _title: 'Basic site settings'
+  requirements:
+    _permission: 'administer site configuration'
