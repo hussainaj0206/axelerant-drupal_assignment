@@ -1,0 +1,44 @@
+<?php
+namespace Drupal\site_info\Plugin\rest\resource;
+use Drupal\rest\Plugin\ResourceBase; 
+use Drupal\rest\ResourceResponse;
+use Drupal\node\Entity\Node;
+/**    
+ * @RestResource(  
+ *   id = "get_node_data",  
+ *   label = @Translation("Get Node Data"),  
+ *   uri_paths = {  
+ *     "canonical" = "/page_json/{api_key}/{nid}",
+ *   }  
+ * )  
+ */
+class NodeResource extends ResourceBase {
+    public function get($api_key,$nid) {
+        $site_api_key = \Drupal::config('site_info.settings')->get('siteapikey');
+        $query = \Drupal::database();
+        $results = $query->select('node', 'n')
+                        ->condition('n.type', 'page')
+                        ->condition('n.nid', $nid)
+                        ->fields('n',['nid'])
+                        ->execute();
+        
+        foreach($results as $row){
+            $node_id = $row->nid;
+        }
+        if($api_key == $site_api_key && !empty($node_id)){
+            $node_detail = Node::load($nid);
+            $response['nodeDetail']['nid'] = $node_detail->nid->value;
+            $response['nodeDetail']['title'] = $node_detail->getTitle();//$node_details->field_FIELD_NAME->value;
+            $response['nodeDetail']['description'] = trim(strip_tags($node_detail->body->value));
+            $response['ErrorCode'] = 0;
+            $response['ErrorMessage'] = "Success";
+        }else{
+            $response  = array(
+                'ErrorCode' =>  1,
+                'ErrorMessage' =>  "Access Denied",
+            ); 
+        }
+        return  new ResourceResponse($response);  
+    }
+    
+ }

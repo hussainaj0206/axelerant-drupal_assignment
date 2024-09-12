@@ -1,0 +1,62 @@
+<?php
+
+namespace Drupal\site_info\Form;
+    
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\system\Form\SiteInformationForm;
+/**
+ * Class SiteSettingsForm.
+ *
+ * @package Drupal\site_info\Form
+ */
+class SiteSettingsForm extends SiteInformationForm {
+    /**
+    * {@inheritdoc}
+    */
+    
+    //Overrides and extends the buildForm function of parent class
+    public function buildForm(array $form, FormStateInterface $form_state) {
+        //Use of parent form to extend the form functionality
+        $form = parent::buildform($form, $form_state);
+        
+        $api_key_config = $this->config('system.site');//returns a configuration object of the site settings form.
+        $api_key = $api_key_config->get('siteapikey');
+        $form['siteapikey'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Site API Key'),
+            '#default_value' => (!empty($api_key))? $api_key:"No API Key Yet", 
+        );
+        
+        //Change the text of submit button based on the value of Site API Key.
+        $form['actions']['submit']['#value'] = (!empty($api_key))? t('Update configuration'):t('Save configuration');
+        
+        return $form;
+    }
+    
+    //Overrides and extends the submitForm function of parent class
+    public function submitForm(array &$form, FormStateInterface $form_state) {
+        $config = $this->config('system.site');
+        //Loading the current user object
+        $user_details = \Drupal::currentUser();
+        //Getting the current user roles
+        $roles = $user_details->getRoles();
+        $api_key_value = $form_state->getValue('siteapikey');
+        
+        if($api_key_value!="No API Key Yet" && !empty($api_key_value)){
+            if(array_key_exists(1,$roles)){
+                $config->set('siteapikey', $form_state->getValue('siteapikey'));
+                $config->save();
+                drupal_set_message('Site API Key has been updated with value: '.$api_key_value);   
+            }else{
+                drupal_set_message('You are not allowed to change the Site API key','error');
+            }
+        }else{
+            $config->set('siteapikey', "");
+            $config->save();
+            drupal_set_message('No value stored in Site API Key','error');
+        }
+        // Handle submitted values in $form_state here.
+        return parent::submitForm($form, $form_state);
+    }
+    
+}
